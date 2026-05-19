@@ -1,0 +1,4 @@
+checked_posts.json
+__pycache__/
+*.pyc
+.env
