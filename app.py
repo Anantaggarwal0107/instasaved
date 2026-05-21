@@ -13,15 +13,62 @@ st.set_page_config(page_title="📸 Insta Vault", page_icon="📸", layout="cent
 
 st.markdown("""
 <style>
-.stButton>button{min-height:56px;font-size:1.05rem;}
+/* ── Layout ── */
 .block-container{padding-top:3.75rem;padding-bottom:1rem;}
 [data-testid="stSidebar"]{display:none!important;}
 [data-testid="collapsedControl"]{display:none!important;}
-div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:4px;}
+div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:6px;}
 div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-width:0;overflow:hidden;}
+
+/* ── All buttons: compact with rounded corners and tap feedback ── */
+.stButton>button{
+    min-height:44px;
+    font-size:1rem;
+    border-radius:12px!important;
+    transition:filter .12s ease,transform .08s ease;
+}
+.stButton>button:active{filter:brightness(.8);transform:scale(.96);}
+
+/* ── Nav buttons: taller so they're easy to hit ── */
+#top-nav-marker + div .stButton>button,
+#top-nav-marker ~ div .stButton>button{
+    min-height:60px!important;
+    font-size:1.3rem!important;
+}
+
+/* ── Link buttons (Open) ── */
+[data-testid="stLinkButton"]>a{
+    min-height:44px!important;
+    border-radius:12px!important;
+    font-size:0.95rem!important;
+    font-weight:600!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    transition:filter .12s ease,transform .08s ease;
+}
+[data-testid="stLinkButton"]>a:active{filter:brightness(.82);transform:scale(.97);}
+
+/* ── Cards: tighter padding & rounder corners ── */
+[data-testid="stVerticalBlockBorderWrapper"]{
+    border-radius:16px!important;
+    overflow:hidden;
+}
+[data-testid="stVerticalBlockBorderWrapper"]>div{
+    padding:10px 10px 8px!important;
+    gap:0!important;
+}
+
+/* ── Card secondary icon row: shorter buttons ── */
+.icon-row .stButton>button{
+    min-height:40px!important;
+    font-size:1.15rem!important;
+    padding:0!important;
+    border-radius:10px!important;
+}
+
 @media(max-width:640px){
     .block-container{padding-left:0.5rem;padding-right:0.5rem;}
-    .stButton>button{min-height:64px;font-size:1.1rem;padding-left:2px;padding-right:2px;}
 }
 </style>
 """, unsafe_allow_html=True)
@@ -158,6 +205,7 @@ page = st.session_state.nav_page
 # TOP NAV
 # =========================
 
+st.markdown('<div id="top-nav-marker"></div>', unsafe_allow_html=True)
 _nav_cols = st.columns(5)
 for _i, (_col, _ico, _p) in enumerate(zip(_nav_cols, NAV_ICONS, PAGES)):
     with _col:
@@ -284,17 +332,26 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
 
         with grid[i % 2]:
             with st.container(border=True):
-                st.markdown(f"**@{row['owner_username']}**{badge}")
-                st.caption(row["saved_date"].strftime("%d %b %Y"))
-                c_open, c_fav, c_del, c_view = st.columns(4)
-                with c_open:
-                    st.link_button("🔗", row["post_url"], use_container_width=True)
+                uname = row["owner_username"]
+                uname_display = (uname[:16] + "…") if len(uname) > 17 else uname
+                date_str = row["saved_date"].strftime("%d %b %Y")
+                st.markdown(
+                    f"<div style='font-weight:700;font-size:0.9rem;white-space:nowrap;"
+                    f"overflow:hidden;text-overflow:ellipsis;margin-bottom:2px'>"
+                    f"@{uname_display}{badge}</div>"
+                    f"<div style='color:#888;font-size:0.72rem;margin-bottom:8px'>{date_str}</div>",
+                    unsafe_allow_html=True,
+                )
+                st.link_button("🔗  Open", row["post_url"], use_container_width=True, type="primary")
+                st.markdown('<div class="icon-row">', unsafe_allow_html=True)
+                c_fav, c_det, c_del = st.columns(3)
                 with c_fav:
                     if st.button(
                         "★" if is_fav else "☆",
                         key=f"cfav_{key_prefix}_{post_id}",
                         type="primary" if is_fav else "secondary",
                         use_container_width=True,
+                        help="Favourite",
                     ):
                         favs.discard(post_id)
                         pdels.discard(post_id)
@@ -302,12 +359,17 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
                             favs.add(post_id)
                         save_markers(favs, pdels)
                         st.rerun()
+                with c_det:
+                    if st.button("⋯", key=f"view_{key_prefix}_{post_id}",
+                                 use_container_width=True, help="Details"):
+                        post_dialog(row.to_dict())
                 with c_del:
                     if st.button(
                         "🗑",
                         key=f"cdel_{key_prefix}_{post_id}",
                         type="primary" if is_del else "secondary",
                         use_container_width=True,
+                        help="Mark as probably deleted",
                     ):
                         favs.discard(post_id)
                         pdels.discard(post_id)
@@ -315,10 +377,7 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
                             pdels.add(post_id)
                         save_markers(favs, pdels)
                         st.rerun()
-                with c_view:
-                    if st.button("⋯", key=f"view_{key_prefix}_{post_id}",
-                                 use_container_width=True):
-                        post_dialog(row.to_dict())
+                st.markdown('</div>', unsafe_allow_html=True)
 
     pagination_row("bot")
 
