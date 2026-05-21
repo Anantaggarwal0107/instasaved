@@ -15,7 +15,7 @@ st.set_page_config(page_title="📸 Insta Vault", page_icon="📸", layout="cent
 st.markdown("""
 <style>
 .stButton>button{min-height:44px;}
-.block-container{padding-top:1rem;}
+.block-container{padding-top:3.75rem;padding-bottom:5rem;}
 div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap !important;gap:4px;}
 div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-width:0;overflow:hidden;}
 @media(max-width:640px){
@@ -372,6 +372,7 @@ if page == "🎲 Random Reel":
         is_del  = post_id in pdels
         badge   = " ★" if is_fav else (" 🗑" if is_del else "")
 
+        st.markdown("<div style='height:10vh'></div>", unsafe_allow_html=True)
         with st.container(border=True):
             col_name, col_goto = st.columns([9, 1])
             with col_name:
@@ -410,8 +411,11 @@ if page == "🎲 Random Reel":
                         pdels.add(post_id)
                     save_markers(favs, pdels)
                     st.rerun()
+        st.markdown("<div style='height:15vh'></div>", unsafe_allow_html=True)
     else:
+        st.markdown("<div style='height:28vh'></div>", unsafe_allow_html=True)
         st.info("Tap the button below to load a random saved post.")
+        st.markdown("<div style='height:18vh'></div>", unsafe_allow_html=True)
 
     if st.button("🎲 Open Random Saved Post", use_container_width=True, type="primary"):
         st.session_state.random_post = df.sample(1).iloc[0].to_dict()
