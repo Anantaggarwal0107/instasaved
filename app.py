@@ -11,16 +11,45 @@ from pathlib import Path
 
 st.set_page_config(page_title="📸 Insta Vault", page_icon="📸", layout="centered")
 
-# Mobile-first CSS: bigger tap targets, tighter padding on small screens
 st.markdown("""
 <style>
 .stButton>button{min-height:44px;}
-.block-container{padding-top:3.75rem;padding-bottom:5rem;}
-div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap !important;gap:4px;}
+/* room for fixed bottom nav (62px) + random fab (54px) + margin */
+.block-container{padding-top:3.75rem;padding-bottom:9rem;}
+/* hide Streamlit's sidebar and hamburger entirely */
+[data-testid="stSidebar"]{display:none!important;}
+[data-testid="collapsedControl"]{display:none!important;}
+/* keep columns horizontal on mobile */
+div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:4px;}
 div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-width:0;overflow:hidden;}
 @media(max-width:640px){
     .block-container{padding-left:0.5rem;padding-right:0.5rem;}
     .stButton>button{font-size:0.85rem;padding-left:2px;padding-right:2px;}
+}
+/* ── bottom navigation bar ── */
+.btm-nav{
+    position:fixed;bottom:0;left:0;right:0;
+    background:#0e1117;border-top:1px solid #2a2a2a;
+    display:flex;z-index:9999;
+    padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));
+}
+.btm-nav a{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    color:#777;text-decoration:none;font-size:0.58rem;padding:4px 0;gap:1px;
+    -webkit-tap-highlight-color:transparent;
+}
+.btm-nav a.on{color:#ff4b4b;}
+.btm-nav a .ico{font-size:1.35rem;line-height:1.1;}
+/* ── floating random button (above nav) ── */
+.rnd-fab{
+    position:fixed;bottom:68px;left:0.75rem;right:0.75rem;z-index:9998;
+}
+.rnd-fab button{
+    width:100%;padding:14px 16px;border:none;border-radius:10px;
+    background:linear-gradient(135deg,#ff4b4b,#e03030);
+    color:#fff;font-size:1rem;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 16px rgba(255,75,75,0.4);
+    -webkit-tap-highlight-color:transparent;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -63,7 +92,6 @@ def load_markers():
     return set(), set()
 
 def _gist_push(payload: str):
-    """Runs in a daemon thread — never blocks the UI."""
     gist_id = _get_secret("GIST_ID")
     token   = _get_secret("GITHUB_TOKEN")
     if gist_id and token:
@@ -83,7 +111,6 @@ def save_markers(favourites: set, probably_deleted: set):
         MARKERS_FILE.write_text(payload, encoding="utf-8")
     except Exception:
         pass
-    # Fire-and-forget — never blocks a button click
     threading.Thread(target=_gist_push, args=(payload,), daemon=True).start()
 
 # =========================
@@ -140,31 +167,40 @@ if "excluded_users" not in st.session_state:
     st.session_state.excluded_users = []
 
 # =========================
-# NAVIGATION
+# NAVIGATION  (query-param based)
 # =========================
 
-PAGES = ["🎲 Random Reel", "👤 Creators", "🕒 Timeline", "🔍 Search", "📊 Stats"]
+NAV = [
+    ("random",   "🎲", "Random"),
+    ("creators", "👤", "Creators"),
+    ("timeline", "🕒", "Timeline"),
+    ("search",   "🔍", "Search"),
+    ("stats",    "📊", "Stats"),
+]
+VALID_PAGES = {k for k, _, _ in NAV}
 
-# Apply any pending programmatic navigation BEFORE the widget is instantiated
-if "_pending_nav" in st.session_state:
-    st.session_state.nav_page = st.session_state.pop("_pending_nav")
+page   = st.query_params.get("page",   "random")
+action = st.query_params.get("action", "")
+if page not in VALID_PAGES:
+    page = "random"
 
-st.sidebar.title("📸 Insta Vault")
-page = st.sidebar.radio("Navigation", PAGES, key="nav_page")
+# Handle "Open Random" action triggered from the fixed HTML button
+if action == "new_random":
+    st.session_state.random_post = df.sample(1).iloc[0].to_dict()
+    st.query_params["page"]   = "random"
+    st.query_params["action"] = ""
+    st.rerun()
 
-st.sidebar.caption(
-    f"★ {len(st.session_state.favourites):,}  ·  "
-    f"🗑 {len(st.session_state.probably_deleted):,}"
-)
-with st.sidebar.expander("Clear markers"):
-    if st.button("Clear Favourites", use_container_width=True):
-        st.session_state.favourites = set()
-        save_markers(st.session_state.favourites, st.session_state.probably_deleted)
-        st.rerun()
-    if st.button("Clear Prob. Deleted", use_container_width=True):
-        st.session_state.probably_deleted = set()
-        save_markers(st.session_state.favourites, st.session_state.probably_deleted)
-        st.rerun()
+# Bottom navigation bar
+_nav_html = '<nav class="btm-nav">'
+for _key, _ico, _label in NAV:
+    _cls = "on" if page == _key else ""
+    _nav_html += (
+        f'<a href="?page={_key}" class="{_cls}">'
+        f'<span class="ico">{_ico}</span>{_label}</a>'
+    )
+_nav_html += "</nav>"
+st.markdown(_nav_html, unsafe_allow_html=True)
 
 # =========================
 # DIALOG
@@ -181,8 +217,8 @@ def post_dialog(row_dict):
         key=f"dlg_creator_{post_id}",
         use_container_width=True,
     ):
-        st.session_state._pending_nav = "👤 Creators"
         st.session_state.goto_creator = row_dict["owner_username"]
+        st.query_params["page"] = "creators"
         st.rerun()
     st.caption(f"📅 Saved {row_dict['saved_date'].strftime('%d %b %Y')}")
     st.link_button("🚀 Open in Instagram", row_dict["post_url"], use_container_width=True)
@@ -361,7 +397,17 @@ def username_search_input(label, key, max_suggestions=10):
 # RANDOM REEL PAGE
 # =========================
 
-if page == "🎲 Random Reel":
+if page == "random":
+
+    # Fixed "Open Random" floating button — JS changes query param which Streamlit handles
+    # as a soft rerun (session state preserved), caught by action == "new_random" above.
+    st.markdown(
+        '<div class="rnd-fab">'
+        '<button onclick="window.location.search=\'?page=random&action=new_random\'">'
+        "🎲 Open Random Saved Post"
+        "</button></div>",
+        unsafe_allow_html=True,
+    )
 
     if "random_post" in st.session_state:
         post    = st.session_state.random_post
@@ -372,15 +418,15 @@ if page == "🎲 Random Reel":
         is_del  = post_id in pdels
         badge   = " ★" if is_fav else (" 🗑" if is_del else "")
 
-        st.markdown("<div style='height:10vh'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:8vh'></div>", unsafe_allow_html=True)
         with st.container(border=True):
             col_name, col_goto = st.columns([9, 1])
             with col_name:
                 st.markdown(f"**@{post['owner_username']}**{badge}")
             with col_goto:
                 if st.button("👤", key="rnd_creator", help="Go to creator"):
-                    st.session_state._pending_nav = "👤 Creators"
                     st.session_state.goto_creator = post["owner_username"]
+                    st.query_params["page"] = "creators"
                     st.rerun()
             st.caption(f"📅 {post['saved_date'].strftime('%d %b %Y')}")
             st.link_button("🚀 Open in Instagram", post["post_url"], use_container_width=True)
@@ -411,21 +457,15 @@ if page == "🎲 Random Reel":
                         pdels.add(post_id)
                     save_markers(favs, pdels)
                     st.rerun()
-        st.markdown("<div style='height:15vh'></div>", unsafe_allow_html=True)
     else:
-        st.markdown("<div style='height:28vh'></div>", unsafe_allow_html=True)
-        st.info("Tap the button below to load a random saved post.")
-        st.markdown("<div style='height:18vh'></div>", unsafe_allow_html=True)
-
-    if st.button("🎲 Open Random Saved Post", use_container_width=True, type="primary"):
-        st.session_state.random_post = df.sample(1).iloc[0].to_dict()
-        st.rerun()
+        st.markdown("<div style='height:30vh'></div>", unsafe_allow_html=True)
+        st.info("Tap **Open Random Saved Post** below to get started.")
 
 # =========================
 # CREATORS PAGE
 # =========================
 
-elif page == "👤 Creators":
+elif page == "creators":
 
     st.title("👤 Top Creators")
 
@@ -469,7 +509,7 @@ elif page == "👤 Creators":
 # TIMELINE PAGE
 # =========================
 
-elif page == "🕒 Timeline":
+elif page == "timeline":
 
     st.title("🕒 Timeline")
 
@@ -515,7 +555,6 @@ elif page == "🕒 Timeline":
         st.session_state["tl_filter_sig"] = filter_sig
         st.session_state["timeline_page"]  = 0
 
-    # Build filtered view — no copy(), chain boolean masks directly
     mask = (
         (df["saved_date"].dt.date >= start_date) &
         (df["saved_date"].dt.date <= end_date)
@@ -550,7 +589,7 @@ elif page == "🕒 Timeline":
 # SEARCH PAGE
 # =========================
 
-elif page == "🔍 Search":
+elif page == "search":
 
     st.title("🔍 Search")
 
@@ -571,7 +610,7 @@ elif page == "🔍 Search":
 # STATS PAGE
 # =========================
 
-elif page == "📊 Stats":
+elif page == "stats":
 
     st.title("📊 Vault Statistics")
 
@@ -588,7 +627,23 @@ elif page == "📊 Stats":
     st.divider()
     oldest, newest = df["saved_date"].min(), df["saved_date"].max()
     st.caption(f"📅 {oldest.strftime('%d %b %Y')} → {newest.strftime('%d %b %Y')}")
-    st.divider()
 
+    st.divider()
     st.subheader("🏆 Top 25 Creators")
     st.dataframe(vc.head(25), use_container_width=True)
+
+    st.divider()
+    st.subheader("🔖 Markers")
+    st.caption(
+        f"★ Favourites: {len(st.session_state.favourites):,}  ·  "
+        f"🗑 Prob. Deleted: {len(st.session_state.probably_deleted):,}"
+    )
+    with st.expander("Clear markers"):
+        if st.button("Clear Favourites", use_container_width=True):
+            st.session_state.favourites = set()
+            save_markers(st.session_state.favourites, st.session_state.probably_deleted)
+            st.rerun()
+        if st.button("Clear Prob. Deleted", use_container_width=True):
+            st.session_state.probably_deleted = set()
+            save_markers(st.session_state.favourites, st.session_state.probably_deleted)
+            st.rerun()
