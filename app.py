@@ -13,43 +13,15 @@ st.set_page_config(page_title="📸 Insta Vault", page_icon="📸", layout="cent
 
 st.markdown("""
 <style>
-.stButton>button{min-height:44px;}
-/* room for fixed bottom nav (62px) + random fab (54px) + margin */
-.block-container{padding-top:3.75rem;padding-bottom:9rem;}
-/* hide Streamlit's sidebar and hamburger entirely */
+.stButton>button{min-height:56px;font-size:1.05rem;}
+.block-container{padding-top:3.75rem;padding-bottom:1rem;}
 [data-testid="stSidebar"]{display:none!important;}
 [data-testid="collapsedControl"]{display:none!important;}
-/* keep columns horizontal on mobile */
 div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:4px;}
 div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-width:0;overflow:hidden;}
 @media(max-width:640px){
     .block-container{padding-left:0.5rem;padding-right:0.5rem;}
-    .stButton>button{font-size:0.85rem;padding-left:2px;padding-right:2px;}
-}
-/* ── bottom navigation bar ── */
-.btm-nav{
-    position:fixed;bottom:0;left:0;right:0;
-    background:#0e1117;border-top:1px solid #2a2a2a;
-    display:flex;z-index:9999;
-    padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));
-}
-.btm-nav a{
-    flex:1;display:flex;flex-direction:column;align-items:center;
-    color:#777;text-decoration:none;font-size:0.58rem;padding:4px 0;gap:1px;
-    -webkit-tap-highlight-color:transparent;
-}
-.btm-nav a.on{color:#ff4b4b;}
-.btm-nav a .ico{font-size:1.35rem;line-height:1.1;}
-/* ── floating random button (above nav) ── */
-.rnd-fab{
-    position:fixed;bottom:68px;left:0.75rem;right:0.75rem;z-index:9998;
-}
-.rnd-fab button{
-    width:100%;padding:14px 16px;border:none;border-radius:10px;
-    background:linear-gradient(135deg,#ff4b4b,#e03030);
-    color:#fff;font-size:1rem;font-weight:700;cursor:pointer;
-    box-shadow:0 4px 16px rgba(255,75,75,0.4);
-    -webkit-tap-highlight-color:transparent;
+    .stButton>button{min-height:64px;font-size:1.1rem;padding-left:2px;padding-right:2px;}
 }
 </style>
 """, unsafe_allow_html=True)
@@ -167,40 +139,38 @@ if "excluded_users" not in st.session_state:
     st.session_state.excluded_users = []
 
 # =========================
-# NAVIGATION  (query-param based)
+# NAVIGATION  (session-state, no query params)
 # =========================
 
-NAV = [
-    ("random",   "🎲", "Random"),
-    ("creators", "👤", "Creators"),
-    ("timeline", "🕒", "Timeline"),
-    ("search",   "🔍", "Search"),
-    ("stats",    "📊", "Stats"),
-]
-VALID_PAGES = {k for k, _, _ in NAV}
+PAGES     = ["🎲 Random", "👤 Creators", "🕒 Timeline", "🔍 Search", "📊 Stats"]
+NAV_ICONS = ["🎲",        "👤",          "🕒",          "🔍",        "📊"]
 
-page   = st.query_params.get("page",   "random")
-action = st.query_params.get("action", "")
-if page not in VALID_PAGES:
-    page = "random"
+if "nav_page" not in st.session_state:
+    st.session_state.nav_page = PAGES[0]
 
-# Handle "Open Random" action triggered from the fixed HTML button
-if action == "new_random":
-    st.session_state.random_post = df.sample(1).iloc[0].to_dict()
-    st.query_params["page"]   = "random"
-    st.query_params["action"] = ""
-    st.rerun()
+# Apply any pending programmatic navigation (e.g. from dialog username click)
+if "_pending_nav" in st.session_state:
+    st.session_state.nav_page = st.session_state.pop("_pending_nav")
 
-# Bottom navigation bar
-_nav_html = '<nav class="btm-nav">'
-for _key, _ico, _label in NAV:
-    _cls = "on" if page == _key else ""
-    _nav_html += (
-        f'<a href="?page={_key}" class="{_cls}">'
-        f'<span class="ico">{_ico}</span>{_label}</a>'
-    )
-_nav_html += "</nav>"
-st.markdown(_nav_html, unsafe_allow_html=True)
+page = st.session_state.nav_page
+
+# =========================
+# TOP NAV
+# =========================
+
+_nav_cols = st.columns(5)
+for _i, (_col, _ico, _p) in enumerate(zip(_nav_cols, NAV_ICONS, PAGES)):
+    with _col:
+        if st.button(
+            _ico,
+            key=f"topnav_{_i}",
+            type="primary" if page == _p else "secondary",
+            use_container_width=True,
+            help=_p,
+        ):
+            st.session_state.nav_page = _p
+            st.rerun()
+st.markdown("<hr style='margin:4px 0 12px;opacity:0.2'>", unsafe_allow_html=True)
 
 # =========================
 # DIALOG
@@ -217,8 +187,8 @@ def post_dialog(row_dict):
         key=f"dlg_creator_{post_id}",
         use_container_width=True,
     ):
-        st.session_state.goto_creator = row_dict["owner_username"]
-        st.query_params["page"] = "creators"
+        st.session_state._pending_nav  = "👤 Creators"
+        st.session_state.goto_creator  = row_dict["owner_username"]
         st.rerun()
     st.caption(f"📅 Saved {row_dict['saved_date'].strftime('%d %b %Y')}")
     st.link_button("🚀 Open in Instagram", row_dict["post_url"], use_container_width=True)
@@ -397,17 +367,7 @@ def username_search_input(label, key, max_suggestions=10):
 # RANDOM REEL PAGE
 # =========================
 
-if page == "random":
-
-    # Fixed "Open Random" floating button — JS changes query param which Streamlit handles
-    # as a soft rerun (session state preserved), caught by action == "new_random" above.
-    st.markdown(
-        '<div class="rnd-fab">'
-        '<button onclick="window.location.search=\'?page=random&action=new_random\'">'
-        "🎲 Open Random Saved Post"
-        "</button></div>",
-        unsafe_allow_html=True,
-    )
+if page == "🎲 Random":
 
     if "random_post" in st.session_state:
         post    = st.session_state.random_post
@@ -425,8 +385,8 @@ if page == "random":
                 st.markdown(f"**@{post['owner_username']}**{badge}")
             with col_goto:
                 if st.button("👤", key="rnd_creator", help="Go to creator"):
+                    st.session_state._pending_nav = "👤 Creators"
                     st.session_state.goto_creator = post["owner_username"]
-                    st.query_params["page"] = "creators"
                     st.rerun()
             st.caption(f"📅 {post['saved_date'].strftime('%d %b %Y')}")
             st.link_button("🚀 Open in Instagram", post["post_url"], use_container_width=True)
@@ -457,15 +417,22 @@ if page == "random":
                         pdels.add(post_id)
                     save_markers(favs, pdels)
                     st.rerun()
+        st.markdown("<div style='height:20vh'></div>", unsafe_allow_html=True)
     else:
-        st.markdown("<div style='height:30vh'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:25vh'></div>", unsafe_allow_html=True)
         st.info("Tap **Open Random Saved Post** below to get started.")
+        st.markdown("<div style='height:14vh'></div>", unsafe_allow_html=True)
+
+    if st.button("🎲 Open Random Saved Post", use_container_width=True, type="primary",
+                 key="rnd_open"):
+        st.session_state.random_post = df.sample(1).iloc[0].to_dict()
+        st.rerun()
 
 # =========================
 # CREATORS PAGE
 # =========================
 
-elif page == "creators":
+elif page == "👤 Creators":
 
     st.title("👤 Top Creators")
 
@@ -509,7 +476,7 @@ elif page == "creators":
 # TIMELINE PAGE
 # =========================
 
-elif page == "timeline":
+elif page == "🕒 Timeline":
 
     st.title("🕒 Timeline")
 
@@ -589,7 +556,7 @@ elif page == "timeline":
 # SEARCH PAGE
 # =========================
 
-elif page == "search":
+elif page == "🔍 Search":
 
     st.title("🔍 Search")
 
@@ -610,7 +577,7 @@ elif page == "search":
 # STATS PAGE
 # =========================
 
-elif page == "stats":
+elif page == "📊 Stats":
 
     st.title("📊 Vault Statistics")
 
@@ -647,3 +614,4 @@ elif page == "stats":
             st.session_state.probably_deleted = set()
             save_markers(st.session_state.favourites, st.session_state.probably_deleted)
             st.rerun()
+
