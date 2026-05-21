@@ -16,9 +16,11 @@ st.markdown("""
 <style>
 .stButton>button{min-height:44px;}
 .block-container{padding-top:1rem;}
+div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap !important;gap:4px;}
+div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-width:0;overflow:hidden;}
 @media(max-width:640px){
     .block-container{padding-left:0.5rem;padding-right:0.5rem;}
-    div[data-testid="stHorizontalBlock"]{gap:4px;}
+    .stButton>button{font-size:0.85rem;padding-left:2px;padding-right:2px;}
 }
 </style>
 """, unsafe_allow_html=True)
@@ -218,16 +220,6 @@ def post_dialog(row_dict):
 # CARD GRID FRAGMENT
 # =========================
 
-def _page_items(current, total):
-    if total <= 6:
-        return list(range(total))
-    if current <= 2:
-        return [0, 1, 2, "...", total - 1]
-    if current >= total - 3:
-        return [0, "...", total - 3, total - 2, total - 1]
-    return [0, "...", current - 1, current, current + 1, "...", total - 1]
-
-
 @st.fragment
 def render_card_grid(filtered_df, per_page, page_key, key_prefix):
     total_posts = len(filtered_df)
@@ -240,42 +232,25 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
     st.session_state[page_key] = current_page
 
     def pagination_row(suffix):
-        items   = _page_items(current_page, total_pages)
-        weights = [0.7] + [0.45 if x == "..." else 1.0 for x in items] + [0.7]
-        cols    = st.columns(weights)
-
-        with cols[0]:
+        c_prev, c_info, c_next = st.columns([1, 3, 1])
+        with c_prev:
             if st.button("◀", key=f"prev_{suffix}_{page_key}",
                          disabled=(current_page == 0), use_container_width=True):
                 st.session_state[page_key] -= 1
                 st.rerun()
-
-        for i, item in enumerate(items):
-            with cols[i + 1]:
-                if item == "...":
-                    st.markdown(
-                        "<p style='text-align:center;margin:6px 0 0 0;color:grey'>•••</p>",
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    is_cur = item == current_page
-                    if st.button(
-                        str(item + 1),
-                        key=f"pg_{suffix}_{page_key}_{item}",
-                        type="primary" if is_cur else "secondary",
-                        disabled=is_cur,
-                        use_container_width=True,
-                    ):
-                        st.session_state[page_key] = item
-                        st.rerun()
-
-        with cols[-1]:
+        with c_info:
+            st.markdown(
+                f"<p style='text-align:center;margin:10px 0 0 0;font-size:0.9rem'>"
+                f"{current_page + 1} / {total_pages:,}</p>",
+                unsafe_allow_html=True,
+            )
+        with c_next:
             if st.button("▶", key=f"next_{suffix}_{page_key}",
                          disabled=(current_page >= total_pages - 1), use_container_width=True):
                 st.session_state[page_key] += 1
                 st.rerun()
 
-    st.caption(f"{total_posts:,} posts  ·  page {current_page + 1} of {total_pages:,}")
+    st.caption(f"{total_posts:,} posts")
     pagination_row("top")
 
     new_p = st.selectbox(
