@@ -200,7 +200,7 @@ def get_instagram_url(url: str) -> str:
     if kind == "tv":
         kind = "p"
         
-    return f"intent://{kind}/{shortcode}/#Intent;package=com.instagram.android;scheme=instagram;end;"
+    return f"intent://www.instagram.com/{kind}/{shortcode}/#Intent;package=com.instagram.android;scheme=https;end;"
 
 def ig_open_button(url: str, label: str = "🚀 Open in Instagram", full_width: bool = True):
     target_url = get_instagram_url(url)
