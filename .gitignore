@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .env
 requirements.txt
+app1.py
+appbackup.py

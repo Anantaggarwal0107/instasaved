@@ -14,57 +14,147 @@ st.set_page_config(page_title="📸 Insta Vault", page_icon="📸", layout="cent
 st.markdown("""
 <style>
 /* ── Layout ── */
-.block-container{padding-top:3.75rem;padding-bottom:1rem;}
+.block-container{
+    padding-top:5rem;
+    padding-bottom:0.4rem;
+}
 [data-testid="stSidebar"]{display:none!important;}
 [data-testid="collapsedControl"]{display:none!important;}
-div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:6px;}
+header[data-testid="stHeader"]{background:transparent!important;}
+#top-nav-marker + div div[data-testid="stHorizontalBlock"]{
+    flex-wrap:nowrap!important;
+    gap:8px;
+    position:fixed;
+    top:2.875rem;
+    left:0;
+    right:0;
+    z-index:999;
+    background:#0b1020;
+    padding:6px 12px;
+}
 div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-width:0;overflow:hidden;}
 
-/* ── All buttons: compact with rounded corners and tap feedback ── */
+/* ── All buttons: compact base ── */
 .stButton>button{
-    min-height:44px;
-    font-size:1rem;
-    border-radius:12px!important;
+    min-height:36px;
+    font-size:0.88rem;
+    border-radius:9px!important;
     transition:filter .12s ease,transform .08s ease;
 }
 .stButton>button:active{filter:brightness(.8);transform:scale(.96);}
 
-/* ── Nav buttons: taller so they're easy to hit ── */
+/* ── Nav buttons: taller touch targets ── */
 #top-nav-marker + div .stButton>button,
 #top-nav-marker ~ div .stButton>button{
     min-height:60px!important;
     font-size:1.3rem!important;
 }
 
-/* ── Link buttons (Open) ── */
-[data-testid="stLinkButton"]>a{
-    min-height:44px!important;
-    border-radius:12px!important;
-    font-size:0.95rem!important;
-    font-weight:600!important;
+/* ── Full-width Open button (Random page) ── */
+a.ig-open-btn{
     display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
+    align-items:center;
+    justify-content:center;
+    min-height:44px;
+    border-radius:12px;
+    font-size:0.95rem;
+    font-weight:600;
+    padding:0 12px;
+    background:#FF4B4B;
+    color:#fff!important;
+    text-decoration:none!important;
+    box-sizing:border-box;
     transition:filter .12s ease,transform .08s ease;
 }
-[data-testid="stLinkButton"]>a:active{filter:brightness(.82);transform:scale(.97);}
+a.ig-open-btn:active{filter:brightness(.82);transform:scale(.97);}
 
-/* ── Cards: tighter padding & rounder corners ── */
+/* ── Compact Open pill (list rows) ── */
+a.ig-open-btn-sm{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:38px;
+    border-radius:999px;
+    font-size:0.85rem;
+    font-weight:700;
+    padding:0 14px;
+    background:#FF4B4B;
+    border:none;
+    color:#fff!important;
+    text-decoration:none!important;
+    white-space:nowrap;
+    width:100%;
+    box-sizing:border-box;
+    transition:all .12s ease;
+}
+a.ig-open-btn-sm:hover{filter:brightness(1.1);}
+a.ig-open-btn-sm:active{filter:brightness(.88);transform:scale(.97);}
+
+/* ── Random-page card ── */
+
+/* ── Compact reel list ── */
+.reel-info{
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    min-height:38px;
+}
+.reel-username{
+    font-weight:750;
+    font-size:0.96rem;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    line-height:1.2;
+    letter-spacing:-0.01em;
+}
+.reel-meta{
+    color:rgba(255,255,255,0.42);
+    font-size:0.62rem;
+    margin-top:1px;
+    letter-spacing:0.01em;
+}
+.reel-badge-fav{color:#f5a623;}
+.reel-badge-del{opacity:0.45;}
+/* ── Card container ── */
 [data-testid="stVerticalBlockBorderWrapper"]{
     border-radius:16px!important;
     overflow:hidden;
 }
 [data-testid="stVerticalBlockBorderWrapper"]>div{
-    padding:10px 10px 8px!important;
+    padding:10px 14px!important;
     gap:0!important;
 }
 
-/* ── Card secondary icon row: shorter buttons ── */
-.icon-row .stButton>button{
-    min-height:40px!important;
-    font-size:1.15rem!important;
-    padding:0!important;
+/* ── Inline action buttons (fav, del, more) ── */
+.reel-action-btn .stButton>button{
+    min-height:44px!important;
+    font-size:1.3rem!important;
+    font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif!important;
+    padding:4px 2px!important;
     border-radius:10px!important;
+    background:rgba(255,255,255,0.06)!important;
+    border:none!important;
+    color:rgba(255,255,255,0.7)!important;
+    box-shadow:none!important;
+    overflow:visible!important;
+    line-height:1.4!important;
+}
+.reel-action-btn .stButton>button:hover{
+    background:rgba(255,255,255,0.12)!important;
+}
+.reel-action-btn .stButton>button[kind="primary"]{
+    background:#FF4B4B!important;
+    color:#fff!important;
+    border:none!important;
+}
+.reel-action-btn .stButton>button[kind="primary"]:hover{
+    background:#ff3333!important;
+}
+button[kind="secondary"]{
+    background:rgba(255,255,255,0.03)!important;
+    border:none!important;
 }
 
 @media(max-width:640px){
@@ -72,6 +162,18 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-width:0;ove
 }
 </style>
 """, unsafe_allow_html=True)
+
+# =========================
+# HELPERS
+# =========================
+
+def ig_open_button(url: str, label: str = "🚀 Open in Instagram", full_width: bool = True):
+    """Renders an anchor with target=_self so mobile universal links open the Instagram app."""
+    width = "width:100%;" if full_width else ""
+    st.markdown(
+        f'<a href="{url}" target="_self" class="ig-open-btn" style="{width}">{label}</a>',
+        unsafe_allow_html=True,
+    )
 
 # =========================
 # PERSISTENCE
@@ -239,7 +341,7 @@ def post_dialog(row_dict):
         st.session_state.goto_creator  = row_dict["owner_username"]
         st.rerun()
     st.caption(f"📅 Saved {row_dict['saved_date'].strftime('%d %b %Y')}")
-    st.link_button("🚀 Open in Instagram", row_dict["post_url"], use_container_width=True)
+    ig_open_button(row_dict["post_url"])
     st.divider()
 
     col_fav, col_del = st.columns(2)
@@ -322,62 +424,72 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
     page_df = filtered_df.iloc[current_page * per_page : (current_page + 1) * per_page]
     favs    = st.session_state.favourites
     pdels   = st.session_state.probably_deleted
-    grid    = st.columns(2)
 
     for i, (_, row) in enumerate(page_df.iterrows()):
-        post_id = row["id"]
-        is_fav  = post_id in favs
-        is_del  = post_id in pdels
-        badge   = " ★" if is_fav else (" 🗑" if is_del else "")
+        post_id  = row["id"]
+        is_fav   = post_id in favs
+        is_del   = post_id in pdels
 
-        with grid[i % 2]:
-            with st.container(border=True):
-                uname = row["owner_username"]
-                uname_display = (uname[:16] + "…") if len(uname) > 17 else uname
-                date_str = row["saved_date"].strftime("%d %b %Y")
+        uname         = row["owner_username"]
+        uname_display = (uname[:22] + "…") if len(uname) > 23 else uname
+        date_str      = row["saved_date"].strftime("%d %b %Y")
+
+        if is_fav:
+            badge_html = " <span class='reel-badge-fav'>★</span>"
+        elif is_del:
+            badge_html = " <span class='reel-badge-del'>🗑</span>"
+        else:
+            badge_html = ""
+
+        with st.container(border=True):
+            c_info, c_fav, c_del, c_more, c_open = st.columns([5, 2, 2, 2, 4], vertical_alignment="center")
+
+            with c_info:
                 st.markdown(
-                    f"<div style='font-weight:700;font-size:0.9rem;white-space:nowrap;"
-                    f"overflow:hidden;text-overflow:ellipsis;margin-bottom:2px'>"
-                    f"@{uname_display}{badge}</div>"
-                    f"<div style='color:#888;font-size:0.72rem;margin-bottom:8px'>{date_str}</div>",
+                    f"<div class='reel-info'>"
+                    f"<div class='reel-username'>@{uname_display}{badge_html}</div>"
+                    f"<div class='reel-meta'>{date_str}</div>"
+                    f"</div>",
                     unsafe_allow_html=True,
                 )
-                st.link_button("🔗  Open", row["post_url"], use_container_width=True, type="primary")
-                st.markdown('<div class="icon-row">', unsafe_allow_html=True)
-                c_fav, c_det, c_del = st.columns(3)
-                with c_fav:
-                    if st.button(
-                        "★" if is_fav else "☆",
-                        key=f"cfav_{key_prefix}_{post_id}",
-                        type="primary" if is_fav else "secondary",
-                        use_container_width=True,
-                        help="Favourite",
-                    ):
+
+            with c_fav:
+                fav_active = post_id in favs
+                st.markdown('<div class="reel-action-btn">', unsafe_allow_html=True)
+                if st.button("★" if fav_active else "☆", key=f"fav_inline_{post_id}", use_container_width=True, type="primary" if fav_active else "secondary"):
+                    pdels.discard(post_id)
+                    if fav_active:
                         favs.discard(post_id)
-                        pdels.discard(post_id)
-                        if not is_fav:
-                            favs.add(post_id)
-                        save_markers(favs, pdels)
-                        st.rerun()
-                with c_det:
-                    if st.button("⋯", key=f"view_{key_prefix}_{post_id}",
-                                 use_container_width=True, help="Details"):
-                        post_dialog(row.to_dict())
-                with c_del:
-                    if st.button(
-                        "🗑",
-                        key=f"cdel_{key_prefix}_{post_id}",
-                        type="primary" if is_del else "secondary",
-                        use_container_width=True,
-                        help="Mark as probably deleted",
-                    ):
-                        favs.discard(post_id)
-                        pdels.discard(post_id)
-                        if not is_del:
-                            pdels.add(post_id)
-                        save_markers(favs, pdels)
-                        st.rerun()
+                    else:
+                        favs.add(post_id)
+                    save_markers(favs, pdels)
+                    st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
+
+            with c_del:
+                del_active = post_id in pdels
+                st.markdown('<div class="reel-action-btn">', unsafe_allow_html=True)
+                if st.button("🗑", key=f"del_inline_{post_id}", use_container_width=True, type="primary" if del_active else "secondary"):
+                    favs.discard(post_id)
+                    if del_active:
+                        pdels.discard(post_id)
+                    else:
+                        pdels.add(post_id)
+                    save_markers(favs, pdels)
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            with c_more:
+                st.markdown('<div class="reel-action-btn">', unsafe_allow_html=True)
+                if st.button("⋮", key=f"menu_{key_prefix}_{post_id}", use_container_width=True):
+                    post_dialog(row.to_dict())
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            with c_open:
+                st.markdown(
+                    f'<a href="{row["post_url"]}" target="_self" class="ig-open-btn-sm">Open</a>',
+                    unsafe_allow_html=True,
+                )
 
     pagination_row("bot")
 
@@ -428,7 +540,12 @@ def username_search_input(label, key, max_suggestions=10):
 
 if page == "🎲 Random":
 
+    if "random_post" not in st.session_state:
+        st.markdown("<div style='height:55vh'></div>", unsafe_allow_html=True)
+        st.info("Tap **Open Random Saved Post** below to get started.")
+
     if "random_post" in st.session_state:
+        st.markdown("<div style='height:30vh'></div>", unsafe_allow_html=True)
         post    = st.session_state.random_post
         post_id = post["id"]
         favs    = st.session_state.favourites
@@ -437,7 +554,6 @@ if page == "🎲 Random":
         is_del  = post_id in pdels
         badge   = " ★" if is_fav else (" 🗑" if is_del else "")
 
-        st.markdown("<div style='height:8vh'></div>", unsafe_allow_html=True)
         with st.container(border=True):
             col_name, col_goto = st.columns([9, 1])
             with col_name:
@@ -448,7 +564,7 @@ if page == "🎲 Random":
                     st.session_state.goto_creator = post["owner_username"]
                     st.rerun()
             st.caption(f"📅 {post['saved_date'].strftime('%d %b %Y')}")
-            st.link_button("🚀 Open in Instagram", post["post_url"], use_container_width=True)
+            ig_open_button(post["post_url"])
             c_fav, c_del = st.columns(2)
             with c_fav:
                 if st.button(
@@ -476,16 +592,26 @@ if page == "🎲 Random":
                         pdels.add(post_id)
                     save_markers(favs, pdels)
                     st.rerun()
-        st.markdown("<div style='height:20vh'></div>", unsafe_allow_html=True)
-    else:
-        st.markdown("<div style='height:25vh'></div>", unsafe_allow_html=True)
-        st.info("Tap **Open Random Saved Post** below to get started.")
-        st.markdown("<div style='height:14vh'></div>", unsafe_allow_html=True)
 
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="
+            position:fixed;
+            bottom:calc(18px + env(safe-area-inset-bottom));
+            left:0;
+            right:0;
+            padding:0 14px;
+            z-index:999;
+        ">
+        """,
+        unsafe_allow_html=True,
+    )
     if st.button("🎲 Open Random Saved Post", use_container_width=True, type="primary",
                  key="rnd_open"):
         st.session_state.random_post = df.sample(1).iloc[0].to_dict()
         st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================
 # CREATORS PAGE
