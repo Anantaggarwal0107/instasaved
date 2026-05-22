@@ -129,21 +129,7 @@ button[kind="secondary"]{
 # =========================
 
 def ig_open_button(url: str, label: str = "🚀 Open in Instagram", full_width: bool = True):
-    w = "100%" if full_width else "auto"
-    safe_url = json.dumps(url)
-    components.html(
-        f"""<style>
-        *{{margin:0;padding:0;box-sizing:border-box;}}
-        a{{display:flex;align-items:center;justify-content:center;width:{w};height:44px;
-           border-radius:12px;font-size:0.95rem;font-weight:600;background:#FF4B4B;
-           color:#fff;text-decoration:none;cursor:pointer;
-           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}}
-        a:active{{filter:brightness(.82);transform:scale(.97);}}
-        </style>
-        <a href={safe_url} target="_blank" rel="noopener">{label}</a>""",
-        height=52,
-        scrolling=False,
-    )
+    st.link_button(label, url, use_container_width=full_width, type="primary")
 
 # =========================
 # PERSISTENCE
@@ -456,20 +442,7 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
                 st.markdown('</div>', unsafe_allow_html=True)
 
             with c_open:
-                safe_url = json.dumps(row["post_url"])
-                components.html(
-                    f"""<style>
-                    *{{margin:0;padding:0;box-sizing:border-box;}}
-                    a{{display:flex;align-items:center;justify-content:center;width:100%;height:38px;
-                       border-radius:999px;font-size:0.85rem;font-weight:700;background:#FF4B4B;
-                       color:#fff;text-decoration:none;cursor:pointer;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}}
-                    a:active{{filter:brightness(.88);transform:scale(.97);}}
-                    </style>
-                    <a href={safe_url} target="_blank" rel="noopener">Open</a>""",
-                    height=46,
-                    scrolling=False,
-                )
+                st.link_button("Open", row["post_url"], use_container_width=True, type="primary")
 
     pagination_row("bot")
 
