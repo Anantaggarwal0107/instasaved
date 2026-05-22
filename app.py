@@ -5,6 +5,7 @@ import json
 import requests
 import threading
 import random
+import time
 from pathlib import Path
 
 # =========================
@@ -119,47 +120,6 @@ button[kind="secondary"]{
     border:none!important;
 }
 
-/* ── Custom Instagram Button ── */
-.custom-ig-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 44px;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    background: #FF4B4B;
-    color: #fff !important;
-    text-decoration: none !important;
-    cursor: pointer;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    transition: filter .12s ease, transform .08s ease;
-}
-.custom-ig-btn:active {
-    filter: brightness(.82);
-    transform: scale(.97);
-}
-.custom-ig-btn-compact {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 38px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    background: #FF4B4B;
-    color: #fff !important;
-    text-decoration: none !important;
-    cursor: pointer;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    transition: filter .12s ease, transform .08s ease;
-}
-.custom-ig-btn-compact:active {
-    filter: brightness(.88);
-    transform: scale(.97);
-}
-
 @media(max-width:640px){
     .block-container{padding-left:0.5rem;padding-right:0.5rem;}
 }
@@ -171,12 +131,9 @@ button[kind="secondary"]{
 # =========================
 
 def ig_open_button(url: str, label: str = "🚀 Open in Instagram", full_width: bool = True):
-    unique_target = f"insta_target_{random.randint(100000, 999999)}"
-    w_style = "width: 100%;" if full_width else "width: auto; display: inline-flex; padding: 0 20px;"
-    st.markdown(
-        f'<a href="{url}" target="{unique_target}" class="custom-ig-btn" style="{w_style}">{label}</a>',
-        unsafe_allow_html=True
-    )
+    cb = int(time.time() * 1000)
+    busted_url = f"{url}&cb={cb}" if "?" in url else f"{url}?cb={cb}"
+    st.link_button(label, busted_url, use_container_width=full_width, type="primary")
 
 # =========================
 # PERSISTENCE
@@ -489,11 +446,10 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
                 st.markdown('</div>', unsafe_allow_html=True)
 
             with c_open:
-                unique_target = f"insta_target_{random.randint(100000, 999999)}"
-                st.markdown(
-                    f'<a href="{row["post_url"]}" target="{unique_target}" class="custom-ig-btn-compact">Open</a>',
-                    unsafe_allow_html=True
-                )
+                url = row["post_url"]
+                cb = int(time.time() * 1000)
+                busted_url = f"{url}&cb={cb}" if "?" in url else f"{url}?cb={cb}"
+                st.link_button("Open", busted_url, use_container_width=True, type="primary")
 
     pagination_row("bot")
 
