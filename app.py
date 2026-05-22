@@ -203,8 +203,7 @@ def get_instagram_url(url: str) -> str:
     return f"intent://www.instagram.com/{kind}/{shortcode}/#Intent;package=com.instagram.android;scheme=https;end;"
 
 def ig_open_button(url: str, label: str = "🚀 Open in Instagram", full_width: bool = True):
-    target_url = get_instagram_url(url)
-    btn_html = f'<a href="{target_url}" target="_blank" class="custom-open-btn">{label}</a>'
+    btn_html = f'<a href="{url.strip()}" target="_blank" class="custom-open-btn">{label}</a>'
     st.markdown(btn_html, unsafe_allow_html=True)
 
 
@@ -521,8 +520,8 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
                 st.markdown('</div>', unsafe_allow_html=True)
 
             with c_open:
-                target_url = get_instagram_url(row["post_url"])
-                btn_html = f'<a href="{target_url}" target="_blank" class="custom-open-btn-inline">Open</a>'
+                post_url = row["post_url"].strip()
+                btn_html = f'<a href="{post_url}" target="_blank" class="custom-open-btn-inline">Open</a>'
                 st.markdown(btn_html, unsafe_allow_html=True)
 
 
