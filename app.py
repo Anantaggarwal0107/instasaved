@@ -4,8 +4,6 @@ import pandas as pd
 import json
 import requests
 import threading
-import random
-import time
 from pathlib import Path
 
 # =========================
@@ -119,21 +117,96 @@ button[kind="secondary"]{
     background:rgba(255,255,255,0.03)!important;
     border:none!important;
 }
+a.custom-open-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 38px;
+    background-color: #FF4B4B !important;
+    color: #ffffff !important;
+    border-radius: 9px !important;
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    padding: 6px 16px !important;
+    transition: filter 0.12s ease, transform 0.08s ease, background-color 0.12s ease !important;
+}
+a.custom-open-btn:hover {
+    background-color: #ff3333 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+a.custom-open-btn:active {
+    filter: brightness(0.8) !important;
+    transform: scale(0.96) !important;
+}
+
+a.custom-open-btn-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 36px;
+    background-color: #FF4B4B !important;
+    color: #ffffff !important;
+    border-radius: 9px !important;
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    padding: 4px 8px !important;
+    transition: filter 0.12s ease, transform 0.08s ease, background-color 0.12s ease !important;
+}
+a.custom-open-btn-inline:hover {
+    background-color: #ff3333 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+a.custom-open-btn-inline:active {
+    filter: brightness(0.8) !important;
+    transform: scale(0.96) !important;
+}
 
 @media(max-width:640px){
     .block-container{padding-left:0.5rem;padding-right:0.5rem;}
 }
 </style>
-""", unsafe_allow_html=True)
+""",unsafe_allow_html=True)
 
 # =========================
 # HELPERS
 # =========================
+def get_instagram_url(url: str) -> str:
+    url = url.strip()
+    path = url.replace("https://www.instagram.com/", "").replace("https://instagram.com/", "")
+    parts = [p for p in path.split("/") if p]
+    if len(parts) >= 2:
+        kind = parts[0]  # 'reel', 'p', or 'tv'
+        shortcode = parts[1]
+    elif len(parts) == 1:
+        kind = 'p'
+        shortcode = parts[0]
+    else:
+        return url
+    
+    if kind == "tv":
+        kind = "p"
+        
+    return f"intent://instagram.com/{kind}/{shortcode}/#Intent;package=com.instagram.android;scheme=https;end;"
 
 def ig_open_button(url: str, label: str = "🚀 Open in Instagram", full_width: bool = True):
-    cb = int(time.time() * 1000)
-    busted_url = f"{url}&cb={cb}" if "?" in url else f"{url}?cb={cb}"
-    st.link_button(label, busted_url, use_container_width=full_width, type="primary")
+    target_url = get_instagram_url(url)
+    btn_html = f'<a href="{target_url}" target="_blank" class="custom-open-btn">{label}</a>'
+    st.markdown(btn_html, unsafe_allow_html=True)
+
 
 # =========================
 # PERSISTENCE
@@ -247,6 +320,7 @@ if "favourites" not in st.session_state:
 if "excluded_users" not in st.session_state:
     st.session_state.excluded_users = []
 
+
 # =========================
 # NAVIGATION  (session-state, no query params)
 # =========================
@@ -281,6 +355,7 @@ for _i, (_col, _ico, _p) in enumerate(zip(_nav_cols, NAV_ICONS, PAGES)):
             st.session_state.nav_page = _p
             st.rerun()
 st.markdown("<hr style='margin:4px 0 12px;opacity:0.2'>", unsafe_allow_html=True)
+
 
 # =========================
 # DIALOG
@@ -446,10 +521,10 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
                 st.markdown('</div>', unsafe_allow_html=True)
 
             with c_open:
-                url = row["post_url"]
-                cb = int(time.time() * 1000)
-                busted_url = f"{url}&cb={cb}" if "?" in url else f"{url}?cb={cb}"
-                st.link_button("Open", busted_url, use_container_width=True, type="primary")
+                target_url = get_instagram_url(row["post_url"])
+                btn_html = f'<a href="{target_url}" target="_blank" class="custom-open-btn-inline">Open</a>'
+                st.markdown(btn_html, unsafe_allow_html=True)
+
 
     pagination_row("bot")
 
