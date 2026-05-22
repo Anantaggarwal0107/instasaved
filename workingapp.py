@@ -6,37 +6,6 @@ import threading
 from pathlib import Path
 
 # =========================
-# ANDROID DEEP-LINK HELPER
-# =========================
-
-def _insta_link(label: str, url: str, *, use_container_width: bool = False, primary: bool = True):
-    """Opens the exact CSV URL via window.open so the browser routes it correctly."""
-    url_esc = url.replace("'", "\\'")
-    w_style = "display:block;width:100%;box-sizing:border-box;text-align:center;" if use_container_width else "display:inline-flex;"
-    if primary:
-        btn_style = (
-            "align-items:center;justify-content:center;"
-            "min-height:44px;border-radius:12px;font-size:0.95rem;font-weight:600;"
-            "padding:6px 16px;text-decoration:none;"
-            "transition:filter .12s ease,transform .08s ease;"
-            "background:#E1306C;color:#fff;border:none;cursor:pointer;"
-        )
-    else:
-        btn_style = (
-            "align-items:center;justify-content:center;"
-            "min-height:44px;border-radius:12px;font-size:0.95rem;font-weight:600;"
-            "padding:6px 16px;text-decoration:none;"
-            "transition:filter .12s ease,transform .08s ease;"
-            "background:transparent;color:#E1306C;border:1px solid #E1306C;cursor:pointer;"
-        )
-    st.markdown(
-        f'<a href="{url}" target="_blank" rel="noopener noreferrer"'
-        f' onclick="window.open(\'{url_esc}\',\'_blank\',\'noopener,noreferrer\');return false;"'
-        f' style="{w_style}{btn_style}">{label}</a>',
-        unsafe_allow_html=True,
-    )
-
-# =========================
 # PAGE CONFIG
 # =========================
 
@@ -270,7 +239,7 @@ def post_dialog(row_dict):
         st.session_state.goto_creator  = row_dict["owner_username"]
         st.rerun()
     st.caption(f"📅 Saved {row_dict['saved_date'].strftime('%d %b %Y')}")
-    _insta_link("🚀 Open in Instagram", row_dict["post_url"], use_container_width=True)
+    st.link_button("🚀 Open in Instagram", row_dict["post_url"], use_container_width=True)
     st.divider()
 
     col_fav, col_del = st.columns(2)
@@ -373,7 +342,7 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
                     f"<div style='color:#888;font-size:0.72rem;margin-bottom:8px'>{date_str}</div>",
                     unsafe_allow_html=True,
                 )
-                _insta_link("🔗  Open", row["post_url"], use_container_width=True, primary=True)
+                st.link_button("🔗  Open", row["post_url"], use_container_width=True, type="primary")
                 st.markdown('<div class="icon-row">', unsafe_allow_html=True)
                 c_fav, c_det, c_del = st.columns(3)
                 with c_fav:

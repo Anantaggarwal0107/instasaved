@@ -185,7 +185,7 @@ a.custom-open-btn-inline:active {
 # HELPERS
 # =========================
 def get_instagram_url(url: str) -> str:
-    url = url.strip()
+    url = url.strip().split("?")[0].split("#")[0].rstrip("/")
     path = url.replace("https://www.instagram.com/", "").replace("https://instagram.com/", "")
     parts = [p for p in path.split("/") if p]
     if len(parts) >= 2:
