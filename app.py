@@ -171,7 +171,7 @@ def ig_open_button(url: str, label: str = "🚀 Open in Instagram", full_width: 
     """Renders an anchor with target=_self so mobile universal links open the Instagram app."""
     width = "width:100%;" if full_width else ""
     st.markdown(
-        f'<a href="{url}" target="_self" class="ig-open-btn" style="{width}">{label}</a>',
+        f'<a href="{url}" target="_top" class="ig-open-btn" style="{width}">{label}</a>',
         unsafe_allow_html=True,
     )
 
@@ -487,7 +487,7 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
 
             with c_open:
                 st.markdown(
-                    f'<a href="{row["post_url"]}" target="_self" class="ig-open-btn-sm">Open</a>',
+                    f'<a href="{row["post_url"]}" target="_top" class="ig-open-btn-sm">Open</a>',
                     unsafe_allow_html=True,
                 )
 
