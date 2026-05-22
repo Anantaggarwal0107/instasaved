@@ -50,46 +50,6 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-width:0;ove
     font-size:1.3rem!important;
 }
 
-/* ── Full-width Open button (Random page) ── */
-a.ig-open-btn{
-    display:flex!important;
-    align-items:center;
-    justify-content:center;
-    min-height:44px;
-    border-radius:12px;
-    font-size:0.95rem;
-    font-weight:600;
-    padding:0 12px;
-    background:#FF4B4B;
-    color:#fff!important;
-    text-decoration:none!important;
-    box-sizing:border-box;
-    transition:filter .12s ease,transform .08s ease;
-}
-a.ig-open-btn:active{filter:brightness(.82);transform:scale(.97);}
-
-/* ── Compact Open pill (list rows) ── */
-a.ig-open-btn-sm{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    height:38px;
-    border-radius:999px;
-    font-size:0.85rem;
-    font-weight:700;
-    padding:0 14px;
-    background:#FF4B4B;
-    border:none;
-    color:#fff!important;
-    text-decoration:none!important;
-    white-space:nowrap;
-    width:100%;
-    box-sizing:border-box;
-    transition:all .12s ease;
-}
-a.ig-open-btn-sm:hover{filter:brightness(1.1);}
-a.ig-open-btn-sm:active{filter:brightness(.88);transform:scale(.97);}
-
 /* ── Random-page card ── */
 
 /* ── Compact reel list ── */
@@ -168,12 +128,7 @@ button[kind="secondary"]{
 # =========================
 
 def ig_open_button(url: str, label: str = "🚀 Open in Instagram", full_width: bool = True):
-    """Renders an anchor with target=_self so mobile universal links open the Instagram app."""
-    width = "width:100%;" if full_width else ""
-    st.markdown(
-        f'<a href="{url}" target="_top" class="ig-open-btn" style="{width}">{label}</a>',
-        unsafe_allow_html=True,
-    )
+    st.link_button(label, url, use_container_width=full_width, type="primary")
 
 # =========================
 # PERSISTENCE
@@ -486,10 +441,7 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
                 st.markdown('</div>', unsafe_allow_html=True)
 
             with c_open:
-                st.markdown(
-                    f'<a href="{row["post_url"]}" target="_top" class="ig-open-btn-sm">Open</a>',
-                    unsafe_allow_html=True,
-                )
+                st.link_button("Open", row["post_url"], use_container_width=True, type="primary")
 
     pagination_row("bot")
 
