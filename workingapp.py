@@ -10,19 +10,12 @@ from pathlib import Path
 # =========================
 
 def _insta_link(label: str, url: str, *, use_container_width: bool = False, primary: bool = True):
-    """
-    Renders a link that uses Android intent:// deep-linking so Instagram opens
-    the specific post rather than the home feed. Falls back to a normal _blank
-    link on non-Android platforms.
-    """
-    clean = url.replace("https://", "").replace("http://", "").rstrip("/") + "/"
-    intent = f"intent://{clean}#Intent;scheme=https;package=com.instagram.android;end"
-    intent_esc = intent.replace("'", "\\'")
-
-    w_style = "width:100%;box-sizing:border-box;" if use_container_width else ""
+    """Opens the exact CSV URL via window.open so the browser routes it correctly."""
+    url_esc = url.replace("'", "\\'")
+    w_style = "display:block;width:100%;box-sizing:border-box;text-align:center;" if use_container_width else "display:inline-flex;"
     if primary:
         btn_style = (
-            "display:inline-flex;align-items:center;justify-content:center;"
+            "align-items:center;justify-content:center;"
             "min-height:44px;border-radius:12px;font-size:0.95rem;font-weight:600;"
             "padding:6px 16px;text-decoration:none;"
             "transition:filter .12s ease,transform .08s ease;"
@@ -30,19 +23,15 @@ def _insta_link(label: str, url: str, *, use_container_width: bool = False, prim
         )
     else:
         btn_style = (
-            "display:inline-flex;align-items:center;justify-content:center;"
+            "align-items:center;justify-content:center;"
             "min-height:44px;border-radius:12px;font-size:0.95rem;font-weight:600;"
             "padding:6px 16px;text-decoration:none;"
             "transition:filter .12s ease,transform .08s ease;"
             "background:transparent;color:#E1306C;border:1px solid #E1306C;cursor:pointer;"
         )
-    onclick = (
-        "if(/android/i.test(navigator.userAgent)){"
-        f"event.preventDefault();window.location.href='{intent_esc}';}}"
-    )
     st.markdown(
         f'<a href="{url}" target="_blank" rel="noopener noreferrer"'
-        f' onclick="{onclick}"'
+        f' onclick="window.open(\'{url_esc}\',\'_blank\',\'noopener,noreferrer\');return false;"'
         f' style="{w_style}{btn_style}">{label}</a>',
         unsafe_allow_html=True,
     )
@@ -490,7 +479,7 @@ if page == "🎲 Random":
                     st.session_state.goto_creator = post["owner_username"]
                     st.rerun()
             st.caption(f"📅 {post['saved_date'].strftime('%d %b %Y')}")
-            _insta_link("🚀 Open in Instagram", post["post_url"], use_container_width=True)
+            st.link_button("🚀 Open in Instagram", post["post_url"], use_container_width=True)
             c_fav, c_del = st.columns(2)
             with c_fav:
                 if st.button(
