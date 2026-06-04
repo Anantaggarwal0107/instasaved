@@ -5,6 +5,8 @@ import json
 import requests
 import threading
 from pathlib import Path
+import calendar
+import datetime
 
 # =========================
 # PAGE CONFIG
@@ -16,12 +18,15 @@ st.markdown("""
 <style>
 /* ── Layout ── */
 .block-container{
-    padding-top:5rem;
+    padding-top:7.2rem;
     padding-bottom:0.4rem;
+}
+.rnd-page-wrap{
+    padding-bottom: 100px;
 }
 [data-testid="stSidebar"]{display:none!important;}
 [data-testid="collapsedControl"]{display:none!important;}
-header[data-testid="stHeader"]{background:transparent!important;}
+header[data-testid="stHeader"]{background:transparent!important;border:none!important;box-shadow:none!important;}
 #top-nav-marker + div div[data-testid="stHorizontalBlock"]{
     flex-wrap:nowrap!important;
     gap:8px;
@@ -32,6 +37,8 @@ header[data-testid="stHeader"]{background:transparent!important;}
     z-index:999;
     background:#0b1020;
     padding:6px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
 }
 div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-width:0;overflow:hidden;}
 
@@ -44,14 +51,153 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-width:0;ove
 }
 .stButton>button:active{filter:brightness(.8);transform:scale(.96);}
 
-/* ── Nav buttons: taller touch targets ── */
-#top-nav-marker + div .stButton>button,
-#top-nav-marker ~ div .stButton>button{
+/* ── Nav buttons: taller touch targets (only the fixed nav bar) ── */
+#top-nav-marker + div div[data-testid="stHorizontalBlock"] .stButton>button{
     min-height:60px!important;
     font-size:1.3rem!important;
 }
 
-/* ── Random-page card ── */
+/* ── Restore normal sizes for Random-page controls (beat nav specificity) ── */
+#top-nav-marker ~ div .pool-toggle .stButton>button{
+    min-height:32px!important;
+    font-size:0.78rem!important;
+    border-radius:50px!important;
+    padding:4px 14px!important;
+    background:rgba(255,255,255,0.07)!important;
+    border:1px solid rgba(255,255,255,0.12)!important;
+    color:rgba(255,255,255,0.65)!important;
+}
+#top-nav-marker ~ div .pool-toggle .stButton>button[kind="primary"]{
+    background:rgba(255,75,75,0.85)!important;
+    border-color:transparent!important;
+    color:#fff!important;
+}
+#top-nav-marker ~ div .rnd-hero .stButton>button{
+    min-height:62px!important;
+    font-size:1.18rem!important;
+    font-weight:700!important;
+    border-radius:18px!important;
+}
+#top-nav-marker ~ div .rnd-actions .stButton>button{
+    min-height:52px!important;
+    font-size:1.4rem!important;
+    border-radius:14px!important;
+    background:rgba(255,255,255,0.07)!important;
+    border:1px solid rgba(255,255,255,0.10)!important;
+    color:rgba(255,255,255,0.8)!important;
+}
+#top-nav-marker ~ div .rnd-actions .stButton>button[kind="primary"]{
+    background:rgba(255,75,75,0.85)!important;
+    border-color:transparent!important;
+    color:#fff!important;
+}
+
+/* ── Random-page hero card ── */
+.rnd-card{
+    background: linear-gradient(145deg,rgba(255,75,75,0.12) 0%,rgba(20,20,40,0.9) 100%);
+    border: 1px solid rgba(255,75,75,0.3);
+    border-radius: 22px;
+    padding: 32px 24px 28px;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.55);
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.placeholder-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(10,10,20,0.6) 100%) !important;
+    border: 1px dashed rgba(255,255,255,0.15) !important;
+    box-shadow: none !important;
+}
+.rnd-username{
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin-bottom: 6px;
+    word-break: break-word;
+}
+.rnd-date{
+    color: rgba(255,255,255,0.45);
+    font-size: 0.82rem;
+    margin-bottom: 0;
+    letter-spacing: 0.03em;
+}
+.rnd-badge-fav{ color:#f5a623; }
+.rnd-badge-del{ color:rgba(255,255,255,0.35); }
+
+/* ── Fixed bottom bar for Random page ── */
+#rnd-bottom-nav-marker + div{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background: #0b1020;
+    padding: 10px 12px 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+}
+#rnd-bottom-nav-marker + div .stButton>button{
+    min-height: 56px !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+}
+
+/* ── Pill toggle ── */
+.pool-toggle{
+    display:flex;
+    gap:6px;
+    justify-content:center;
+    margin-bottom:10px;
+}
+.pool-toggle .stButton>button{
+    min-height:32px!important;
+    font-size:0.78rem!important;
+    border-radius:50px!important;
+    padding:4px 14px!important;
+    background:rgba(255,255,255,0.07)!important;
+    border:1px solid rgba(255,255,255,0.12)!important;
+    color:rgba(255,255,255,0.65)!important;
+}
+.pool-toggle .stButton>button[kind="primary"]{
+    background:rgba(255,75,75,0.85)!important;
+    border-color:transparent!important;
+    color:#fff!important;
+}
+
+/* ── Random hero button ── */
+.rnd-hero .stButton>button{
+    min-height:62px!important;
+    font-size:1.18rem!important;
+    font-weight:700!important;
+    border-radius:18px!important;
+    letter-spacing:-0.01em;
+}
+
+/* ── Random action row ── */
+.rnd-actions{
+    display:flex;
+    gap:8px;
+    margin-top:6px;
+    margin-bottom:6px;
+}
+.rnd-actions .stButton>button{
+    min-height:52px!important;
+    font-size:1.4rem!important;
+    border-radius:14px!important;
+    background:rgba(255,255,255,0.07)!important;
+    border:1px solid rgba(255,255,255,0.10)!important;
+    color:rgba(255,255,255,0.8)!important;
+}
+.rnd-actions .stButton>button[kind="primary"]{
+    background:rgba(255,75,75,0.85)!important;
+    border-color:transparent!important;
+    color:#fff!important;
+}
 
 /* ── Compact reel list ── */
 .reel-info{
@@ -353,7 +499,7 @@ for _i, (_col, _ico, _p) in enumerate(zip(_nav_cols, NAV_ICONS, PAGES)):
         ):
             st.session_state.nav_page = _p
             st.rerun()
-st.markdown("<hr style='margin:4px 0 12px;opacity:0.2'>", unsafe_allow_html=True)
+# Intruding line removed. Padding-top on .block-container and border-bottom on navbar are used instead to keep icons clean.
 
 
 # =========================
@@ -376,6 +522,27 @@ def post_dialog(row_dict):
         st.rerun()
     st.caption(f"📅 Saved {row_dict['saved_date'].strftime('%d %b %Y')}")
     ig_open_button(row_dict["post_url"])
+    st.caption("🗂 View on Timeline")
+    _dlg_d = pd.Timestamp(row_dict["saved_date"]).date()
+    _tc1, _tc2, _tc3 = st.columns(3)
+    with _tc1:
+        if st.button("📅 Day", key=f"dlg_day_{post_id}", use_container_width=True):
+            st.session_state._pending_nav = "🕒 Timeline"
+            st.session_state.tl_goto_range = (_dlg_d, _dlg_d)
+            st.rerun()
+    with _tc2:
+        if st.button("📆 Week", key=f"dlg_week_{post_id}", use_container_width=True):
+            _ws = _dlg_d - datetime.timedelta(days=_dlg_d.weekday())
+            st.session_state._pending_nav = "🕒 Timeline"
+            st.session_state.tl_goto_range = (_ws, _ws + datetime.timedelta(days=6))
+            st.rerun()
+    with _tc3:
+        if st.button("🗓 Month", key=f"dlg_month_{post_id}", use_container_width=True):
+            _ms = _dlg_d.replace(day=1)
+            _me = _dlg_d.replace(day=calendar.monthrange(_dlg_d.year, _dlg_d.month)[1])
+            st.session_state._pending_nav = "🕒 Timeline"
+            st.session_state.tl_goto_range = (_ms, _me)
+            st.rerun()
     st.divider()
 
     col_fav, col_del = st.columns(2)
@@ -574,78 +741,108 @@ def username_search_input(label, key, max_suggestions=10):
 
 if page == "🎲 Random":
 
-    if "random_post" not in st.session_state:
-        st.markdown("<div style='height:55vh'></div>", unsafe_allow_html=True)
-        st.info("Tap **Open Random Saved Post** below to get started.")
+    st.markdown('<div class="rnd-page-wrap">', unsafe_allow_html=True)
 
-    if "random_post" in st.session_state:
-        st.markdown("<div style='height:30vh'></div>", unsafe_allow_html=True)
-        post    = st.session_state.random_post
-        post_id = post["id"]
-        favs    = st.session_state.favourites
-        pdels   = st.session_state.probably_deleted
-        is_fav  = post_id in favs
-        is_del  = post_id in pdels
-        badge   = " ★" if is_fav else (" 🗑" if is_del else "")
-
-        with st.container(border=True):
-            col_name, col_goto = st.columns([9, 1])
-            with col_name:
-                st.markdown(f"**@{post['owner_username']}**{badge}")
-            with col_goto:
-                if st.button("👤", key="rnd_creator", help="Go to creator"):
-                    st.session_state._pending_nav = "👤 Creators"
-                    st.session_state.goto_creator = post["owner_username"]
-                    st.rerun()
-            st.caption(f"📅 {post['saved_date'].strftime('%d %b %Y')}")
-            ig_open_button(post["post_url"])
-            c_fav, c_del = st.columns(2)
-            with c_fav:
-                if st.button(
-                    "★ Favourited" if is_fav else "☆ Favourite",
-                    key="rnd_fav",
-                    type="primary" if is_fav else "secondary",
-                    use_container_width=True,
-                ):
-                    favs.discard(post_id)
-                    pdels.discard(post_id)
-                    if not is_fav:
-                        favs.add(post_id)
-                    save_markers(favs, pdels)
-                    st.rerun()
-            with c_del:
-                if st.button(
-                    "🗑 Marked" if is_del else "🗑 Prob. Deleted",
-                    key="rnd_del",
-                    type="primary" if is_del else "secondary",
-                    use_container_width=True,
-                ):
-                    favs.discard(post_id)
-                    pdels.discard(post_id)
-                    if not is_del:
-                        pdels.add(post_id)
-                    save_markers(favs, pdels)
-                    st.rerun()
-
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    st.markdown(
-        """
-        <div style="
-            position:fixed;
-            bottom:calc(18px + env(safe-area-inset-bottom));
-            left:0;
-            right:0;
-            padding:0 14px;
-            z-index:999;
-        ">
-        """,
-        unsafe_allow_html=True,
+    # Pool + deleted filter
+    _pool_options = ["All posts", "★ Favourites only", "🗑 Prob. Deleted", "Unmarked only"]
+    _pool_sel = st.selectbox(
+        "Pick from",
+        options=_pool_options,
+        key="rnd_pool_select",
+        label_visibility="collapsed",
     )
-    if st.button("🎲 Open Random Saved Post", use_container_width=True, type="primary",
-                 key="rnd_open"):
-        st.session_state.random_post = df.sample(1).iloc[0].to_dict()
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+    if _pool_sel == "★ Favourites only":
+        _pool = "fav"
+    elif _pool_sel == "🗑 Prob. Deleted":
+        _pool = "del"
+    elif _pool_sel == "Unmarked only":
+        _pool = "unmarked"
+    else:
+        _pool = "all"
+
+    has_post = "random_post" in st.session_state
+
+    if has_post:
+        post = st.session_state.random_post
+        post_id = post["id"]
+        favs = st.session_state.favourites
+        pdels = st.session_state.probably_deleted
+        is_fav = post_id in favs
+        is_del = post_id in pdels
+        badge_html = (
+            " <span class='rnd-badge-fav'>★</span>" if is_fav
+            else " <span class='rnd-badge-del'>🗑</span>" if is_del
+            else ""
+        )
+        st.markdown(
+            f"""<div class="rnd-card">
+                <div class="rnd-username">@{post['owner_username']}{badge_html}</div>
+                <div class="rnd-date">📅 {pd.Timestamp(post['saved_date']).strftime('%d %b %Y')}</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
+        # Open in Instagram
+        ig_open_button(post["post_url"], label="🚀 Open in Instagram")
+        st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
+
+        # Action row
+        st.markdown('<div class="rnd-actions">', unsafe_allow_html=True)
+        _ac1, _ac2, _ac3 = st.columns([1, 1, 1])
+        with _ac1:
+            if st.button("★" if is_fav else "☆", key="rnd_fav",
+                         type="primary" if is_fav else "secondary",
+                         use_container_width=True):
+                favs.discard(post_id); pdels.discard(post_id)
+                if not is_fav: favs.add(post_id)
+                save_markers(favs, pdels); st.rerun()
+        with _ac2:
+            if st.button("🗑", key="rnd_del",
+                         type="primary" if is_del else "secondary",
+                         use_container_width=True):
+                favs.discard(post_id); pdels.discard(post_id)
+                if not is_del: pdels.add(post_id)
+                save_markers(favs, pdels); st.rerun()
+        with _ac3:
+            if st.button("⋮", key="rnd_more", use_container_width=True):
+                post_dialog(post)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    else:
+        st.markdown(
+            """<div class="rnd-card placeholder-card">
+                <div class="rnd-username" style="color:rgba(255,255,255,0.28)">No post loaded</div>
+                <div class="rnd-date" style="color:rgba(255,255,255,0.18);margin-top:8px">Tap a button below to discover a post</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Marker — CSS fixes this horizontal block to the bottom
+    st.markdown('<div id="rnd-bottom-nav-marker"></div>', unsafe_allow_html=True)
+    if _pool == "fav":
+        _rnd_label = "🎲 Random Favourite"
+    elif _pool == "del":
+        _rnd_label = "🎲 Random Deleted"
+    elif _pool == "unmarked":
+        _rnd_label = "🎲 Random Unmarked"
+    else:
+        _rnd_label = "🎲 Open Random Post"
+    if st.button(_rnd_label, use_container_width=True, type="primary", key="rnd_open"):
+        if _pool == "fav":
+            _pool_df = df[df["id"].isin(st.session_state.favourites)]
+        elif _pool == "del":
+            _pool_df = df[df["id"].isin(st.session_state.probably_deleted)]
+        elif _pool == "unmarked":
+            _pool_df = df[~df["id"].isin(st.session_state.favourites | st.session_state.probably_deleted)]
+        else:
+            _pool_df = df
+        if _pool_df.empty:
+            st.toast("No posts in this pool yet!", icon="⚠️")
+        else:
+            st.session_state.random_post = _pool_df.sample(1).iloc[0].to_dict()
+            st.rerun()
 
 # =========================
 # CREATORS PAGE
@@ -653,7 +850,14 @@ if page == "🎲 Random":
 
 elif page == "👤 Creators":
 
-    st.title("👤 Top Creators")
+    _ct, _cr = st.columns([6, 3])
+    with _ct:
+        st.title("👤 Top Creators")
+    with _cr:
+        st.markdown("<div style='margin-top:14px'></div>", unsafe_allow_html=True)
+        if st.button("🎲 Random Creator", key="rnd_creator_btn", use_container_width=True):
+            st.session_state.goto_creator = df["owner_username"].dropna().sample(1).iloc[0]
+            st.rerun()
 
     creator_counts = get_creator_counts(df)
 
@@ -700,6 +904,13 @@ elif page == "🕒 Timeline":
     st.title("🕒 Timeline")
 
     creator_saved_counts = get_creator_saved_counts(df)
+    tl_goto_range = st.session_state.pop("tl_goto_range", None)
+    _tl_min = df["saved_date"].min().date()
+    _tl_max = df["saved_date"].max().date()
+    if tl_goto_range:
+        st.session_state["tl_date_range_widget"] = list(tl_goto_range)
+    elif "tl_date_range_widget" not in st.session_state:
+        st.session_state["tl_date_range_widget"] = [_tl_min, _tl_max]
 
     c1, c2 = st.columns(2)
     with c1:
@@ -709,10 +920,8 @@ elif page == "🕒 Timeline":
 
     search_query = username_search_input("Search by username", key="timeline_search")
 
-    with st.expander("⚙ More Filters"):
-        min_date = df["saved_date"].min().date()
-        max_date = df["saved_date"].max().date()
-        start_date, end_date = st.date_input("Date Range", [min_date, max_date])
+    with st.expander("⚙ More Filters", expanded=tl_goto_range is not None):
+        start_date, end_date = st.date_input("Date Range", key="tl_date_range_widget")
 
         per_page = st.selectbox("Posts per page", [10, 25, 50, 100], index=1)
 
@@ -813,6 +1022,19 @@ elif page == "📊 Stats":
     st.divider()
     oldest, newest = df["saved_date"].min(), df["saved_date"].max()
     st.caption(f"📅 {oldest.strftime('%d %b %Y')} → {newest.strftime('%d %b %Y')}")
+
+    st.divider()
+    st.subheader("📈 Saves Over Time")
+    _monthly = df.copy()
+    _monthly["Month"] = _monthly["saved_date"].dt.to_period("M").astype(str)
+    _monthly_chart = (
+        _monthly.groupby("Month")["id"]
+        .count()
+        .reset_index()
+        .sort_values("Month")
+    )
+    _monthly_chart.columns = ["Month", "Saves"]
+    st.bar_chart(_monthly_chart.set_index("Month"), use_container_width=True)
 
     st.divider()
     st.subheader("🏆 Top 25 Creators")

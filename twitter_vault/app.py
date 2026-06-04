@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 import json
 import re
@@ -261,11 +260,32 @@ a.custom-open-btn-inline:active {
 # =========================
 
 def get_twitter_url(tweet_id: str) -> str:
-    return f"intent://twitter.com/i/web/status/{tweet_id}#Intent;package=com.twitter.android;scheme=https;end;"
+    # return f"https://twitter.com/i/web/status/{tweet_id}"
+    return f"twitter://status?id={tweet_id}"
+
+def _open_onclick(tweet_id: str) -> str:
+    """
+    On Android: fire twitter:// in a new context so the current Streamlit
+    page is not navigated away from (avoids WebSocket disconnect/reload).
+    On other platforms: open the https URL in a new tab.
+    """
+    native = f"twitter://status?id={tweet_id}"
+    web    = f"https://twitter.com/i/web/status/{tweet_id}"
+    return (
+        "event.preventDefault();"
+        "if(/android/i.test(navigator.userAgent)){"
+        f"  window.open('{native}','_blank');"
+        "} else {"
+        f"  window.open('{native}','_blank');"
+        "}"
+    )
 
 def tw_open_button(tweet_id: str, label: str = "🐦 Open in X"):
-    url = get_twitter_url(tweet_id)
-    st.markdown(f'<a href="{url}" target="_blank" class="custom-open-btn">{label}</a>', unsafe_allow_html=True)
+    web_url = get_twitter_url(tweet_id)
+    st.markdown(
+        f'<a href="{web_url}" onclick="{_open_onclick(tweet_id)}" class="custom-open-btn">{label}</a>',
+        unsafe_allow_html=True,
+    )
 
 def extract_hashtags(text: str):
     return [t.lower() for t in re.findall(r"#(\w+)", text)]
@@ -589,7 +609,12 @@ def render_card_grid(filtered_df, per_page, page_key, key_prefix):
                 st.markdown('</div>', unsafe_allow_html=True)
 
             with c_open:
-                btn_html = f'<a href="{get_twitter_url(row["tweet_id"])}" target="_blank" class="custom-open-btn-inline">Open</a>'
+                _tid = row["tweet_id"]
+                btn_html = (
+                    f'<a href="{get_twitter_url(_tid)}" '
+                    f'onclick="{_open_onclick(_tid)}" '
+                    f'class="custom-open-btn-inline">Open</a>'
+                )
                 st.markdown(btn_html, unsafe_allow_html=True)
 
     pagination_row("bot")
